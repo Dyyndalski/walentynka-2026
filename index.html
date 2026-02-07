@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Czy zostaniesz moją Walentynką? ❤️</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(circle at 70% 20%, #ffe3ec, #fff5f8 40%);
+      display: grid;
+      place-items: center;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(255,59,124,0.2);
+      padding: 40px 30px;
+      text-align: center;
+      max-width: 480px;
+      width: 90%;
+      transition: all 0.6s ease;
+    }
+    .card.hidden {
+      opacity: 0;
+      transform: scale(0.9);
+      pointer-events: none;
+    }
+    h1 {
+      margin: 0 0 16px;
+      font-size: clamp(28px, 6vw, 42px);
+    }
+    p {
+      color: #555;
+      margin: 0 0 32px;
+      font-size: clamp(17px, 3.5vw, 20px);
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 16px 36px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      min-width: 140px;
+      transition: all 0.2s;
+    }
+    #yes {
+      background: linear-gradient(135deg, #ff3b7c, #ff7aa2);
+      color: white;
+      box-shadow: 0 6px 20px rgba(255,59,124,0.3);
+    }
+    #yes:hover {
+      transform: scale(1.06) translateY(-2px);
+    }
+    #no {
+      background: #fff0f5;
+      color: #c41e7f;
+      box-shadow: inset 0 3px 10px rgba(199,21,133,0.15);
+      position: relative;
+    }
+    .fullscreen-video {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      color: white;
+    }
+    .fullscreen-video.show {
+      display: flex;
+    }
+    video {
+      max-width: 96%;
+      max-height: 80vh;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px #000c;
+    }
+    .title {
+      font-size: clamp(28px, 7vw, 48px);
+      margin: 24px 0 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <h1>Misiaczku! ❤️</h1>
+  <h2>Czy zostaniesz moją Walentynką? ❤️</h2>
+
+  <div class="buttons">
+    <button id="yes">Tak</button>
+    <button id="no">Nie</button>
+  </div>
+</div>
+
+<div class="fullscreen-video" id="videoScreen">
+  <div class="title">Bardzo Cie Kocham! 🥰💋</div>
+  <video controls autoplay loop playsinline muted>
+    <source src="https://raw.githubusercontent.com/Dyyndalski/walentynka-2026/main/kisses.mp4" type="video/mp4">
+    Twoja przeglądarka nie odtwarza wideo.
+  </video>
+</div>
+
+<script>
+  const yesBtn     = document.getElementById('yes');
+  const noBtn      = document.getElementById('no');
+  const card       = document.getElementById('card');
+  const videoScreen = document.getElementById('videoScreen');
+
+  const phrases = [
+    "Nie no… 😭",
+    "Serio? 🥺",
+    "Oj nieeee…",
+    "A jednak nie? 💔",
+    "Proooszę… 🥹",
+    "Nie dam się złapać! 😏",
+    "Ej weź… 🥰",
+    "To boli… 💔",
+    "Zmieniłaś zdanie? 👀",
+    "Spróbuj jeszcze raz 💕"
+  ];
+
+  let phraseIndex = 0;
+  let escapeCount = 0;
+  const CHANGE_TEXT_EVERY = 4;   // co ile ucieczek zmienia się tekst
+
+  function getNewPhrase() {
+    noBtn.textContent = phrases[phraseIndex];
+    phraseIndex = (phraseIndex + 1) % phrases.length;
+  }
+
+  function moveButton() {
+    const container = document.body.getBoundingClientRect();
+    const w = noBtn.offsetWidth;
+    const h = noBtn.offsetHeight;
+    const margin = 60;
+
+    const maxX = container.width  - w - margin * 2;
+    const maxY = container.height - h - margin * 2;
+
+    const x = margin + Math.random() * maxX;
+    const y = margin + Math.random() * maxY;
+
+    noBtn.style.position = 'absolute';
+    noBtn.style.left     = x + 'px';
+    noBtn.style.top      = y + 'px';
+    noBtn.style.transform = 'translate(0,0)';
+  }
+
+  function isClose(e) {
+    if (!noBtn) return false;
+
+    const r = noBtn.getBoundingClientRect();
+    const mx = e.clientX ?? e.touches?.[0]?.clientX;
+    const my = e.clientY ?? e.touches?.[0]?.clientY;
+
+    if (mx === undefined || my === undefined) return false;
+
+    const dx = mx - (r.left + r.width / 2);
+    const dy = my - (r.top  + r.height / 2);
+    return Math.hypot(dx, dy) < 65;   // im mniejsza wartość, tym wcześniej ucieka
+  }
+
+  function tryEscape(e) {
+    if (!isClose(e)) return;
+
+    escapeCount++;
+
+    if (noBtn.style.position !== 'absolute') {
+      // pierwsza ucieczka
+      moveButton();
+      getNewPhrase();
+    } else {
+      // kolejne
+      moveButton();
+      if (escapeCount % CHANGE_TEXT_EVERY === 0) {
+        getNewPhrase();
+      }
+    }
+  }
+
+  // ────────────────────────────────────────────────
+
+  noBtn.addEventListener('mousemove', tryEscape);
+  noBtn.addEventListener('pointermove', tryEscape);
+  noBtn.addEventListener('touchmove', e => {
+    e.preventDefault();
+    tryEscape(e);
+  }, { passive: false });
+
+  noBtn.addEventListener('mouseenter', tryEscape);
+
+  noBtn.addEventListener('click', e => {
+    e.preventDefault();
+    if (noBtn.style.position === 'absolute') {
+      moveButton();
+      if (escapeCount % CHANGE_TEXT_EVERY === 0) getNewPhrase();
+    }
+  });
+
+  yesBtn.addEventListener('click', () => {
+    card.classList.add('hidden');
+    setTimeout(() => videoScreen.classList.add('show'), 500);
+  });
+</script>
+</body>
+</html>
